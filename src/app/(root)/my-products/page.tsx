@@ -3,19 +3,32 @@
 import React from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { IProduct } from "@/app/types/product";
 import { useGetMyProductsQuery } from "@/redux/features/product/productApi";
+import { IProduct } from "@/app/types/product";
+import ProductCard from "@/components/ProductCard";
 
 const MyProductsPage = () => {
-    // Fetch my products
     const { data, isLoading, isError } = useGetMyProductsQuery({ page: 1, limit: 20 });
 
     if (isLoading) return <p className="text-center py-10">Loading...</p>;
     if (isError) return <p className="text-center py-10 text-red-500">Something went wrong!</p>;
 
-    console.log(data);
     const products = data?.data || [];
+
+    const handleViewProduct = (product: IProduct) => {
+        console.log("View product:", product);
+        // Navigate to product details page or show modal
+    };
+
+    const handleEditProduct = (product: IProduct) => {
+        console.log("Edit product:", product);
+        // Navigate to edit page
+    };
+
+    const handleDeleteProduct = (product: IProduct) => {
+        console.log("Delete product:", product);
+        // Show confirmation dialog and delete
+    };
 
     return (
         <div className="container mx-auto p-6">
@@ -38,16 +51,7 @@ const MyProductsPage = () => {
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map((product: IProduct) => (
-                        <Card key={product._id} className="shadow-md hover:shadow-lg transition">
-                            <CardHeader>
-                                <CardTitle>{product.name}</CardTitle>
-                                <CardDescription>{product.category}</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-gray-600">{product.description}</p>
-                                <p className="mt-2 font-semibold">${product.price}</p>
-                            </CardContent>
-                        </Card>
+                        <ProductCard key={product._id} product={product} onView={handleViewProduct} onEdit={handleEditProduct} onDelete={handleDeleteProduct} />
                     ))}
                 </div>
             )}
