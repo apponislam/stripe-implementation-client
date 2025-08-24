@@ -13,6 +13,11 @@ export interface TProductsResponse {
     };
 }
 
+export interface TSingleProductsResponse {
+    success: boolean;
+    message: string;
+    data: IProduct;
+}
 export const productApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         createProduct: builder.mutation<IProduct, Partial<IProduct>>({
@@ -34,7 +39,7 @@ export const productApi = baseApi.injectEndpoints({
             providesTags: ["MyProducts"],
         }),
 
-        getProductById: builder.query<IProduct, string>({
+        getProductById: builder.query<TSingleProductsResponse, string>({
             query: (id) => `/products/${id}`,
             providesTags: (_result, _err, id) => [{ type: "Products", id }],
         }),
