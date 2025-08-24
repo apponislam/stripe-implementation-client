@@ -2,11 +2,7 @@ import ProductsPage from "@/components/ProductsPage";
 import React from "react";
 
 const page = () => {
-    return (
-        <div>
-            <ProductsPage></ProductsPage>
-        </div>
-    );
+    return <ProductsPage></ProductsPage>;
 };
 
 export default page;

@@ -1,11 +1,7 @@
 import React from "react";
 
 const page = () => {
-    return (
-        <div>
-            <h1>hiii</h1>
-        </div>
-    );
+    return <div>hii</div>;
 };
 
 export default page;
