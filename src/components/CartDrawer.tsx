@@ -17,7 +17,7 @@
 //     name: string;
 //     price: number;
 //     discountPrice?: number;
-//     images: string[];
+//     images?: string[];
 //     description: string;
 //     category: string;
 //     stock: number;
@@ -106,10 +106,10 @@
 //     }
 
 //     return (
-//         <Drawer open={open} onOpenChange={onOpenChange}>
-//             <DrawerContent className="max-h-[90vh]">
-//                 <div className="mx-auto w-full max-w-md">
-//                     <DrawerHeader className="sticky top-0 bg-background z-10 border-b">
+//         <Drawer open={open} onOpenChange={onOpenChange} direction="right">
+//             <DrawerContent className="h-full top-0 right-0 left-auto mt-0 w-[400px] rounded-none">
+//                 <div className="h-full flex flex-col">
+//                     <DrawerHeader className="flex-shrink-0 border-b">
 //                         <div className="flex items-center justify-between">
 //                             <DrawerTitle className="flex items-center gap-2">
 //                                 <ShoppingCart className="h-5 w-5" />
@@ -127,7 +127,7 @@
 //                         </DrawerDescription>
 //                     </DrawerHeader>
 
-//                     <div className="p-4 overflow-y-auto">
+//                     <div className="flex-1 overflow-y-auto p-4">
 //                         {isLoading ? (
 //                             <div className="text-center py-8">
 //                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -154,7 +154,7 @@
 //                                     return (
 //                                         <div key={item._id} className="flex gap-4 p-3 border rounded-lg relative">
 //                                             <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border">
-//                                                 <Image src={item.productId.images[0] || "/placeholder-product.jpg"} alt={item.productId.name} fill className="object-cover" />
+//                                                 <Image src={item?.productId?.images[0] || "/placeholder-product.jpg"} alt={item.productId.name} fill className="object-cover" />
 //                                                 {isOutOfStock && (
 //                                                     <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
 //                                                         <span className="text-xs font-medium text-destructive">Out of stock</span>
@@ -207,7 +207,7 @@
 //                     </div>
 
 //                     {items.length > 0 && (
-//                         <DrawerFooter className="sticky bottom-0 bg-background border-t">
+//                         <DrawerFooter className="flex-shrink-0 border-t">
 //                             <div className="space-y-2">
 //                                 <div className="flex justify-between text-lg font-semibold">
 //                                     <span>Total:</span>
@@ -249,7 +249,7 @@ interface Product {
     name: string;
     price: number;
     discountPrice?: number;
-    images: string[];
+    images?: string[]; // Make images optional
     description: string;
     category: string;
     stock: number;
@@ -383,10 +383,13 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                                     const isUpdating = updatingItems.has(item.productId._id);
                                     const isOutOfStock = item.productId.stock === 0;
 
+                                    // Safely get the first image or use placeholder
+                                    const firstImage = item.productId.images && item.productId.images.length > 0 ? item.productId.images[0] : "/placeholder-product.jpg";
+
                                     return (
                                         <div key={item._id} className="flex gap-4 p-3 border rounded-lg relative">
                                             <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border">
-                                                <Image src={item.productId.images[0] || "/placeholder-product.jpg"} alt={item.productId.name} fill className="object-cover" />
+                                                <Image src={firstImage} alt={item.productId.name} fill className="object-cover" />
                                                 {isOutOfStock && (
                                                     <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
                                                         <span className="text-xs font-medium text-destructive">Out of stock</span>
