@@ -7,15 +7,16 @@ import { Edit, Trash2, Eye, ShoppingCart, ChevronLeft, ChevronRight } from "luci
 import Image from "next/image";
 import { IProduct } from "@/app/types/product";
 import { useState } from "react";
+import { useProductDeleteHandler } from "@/Hooks/useProductDeleteHandler";
 
 interface ProductCardProps {
     product: IProduct;
     onView?: (product: IProduct) => void;
     onEdit?: (product: IProduct) => void;
-    onDelete?: (product: IProduct) => void;
 }
 
-const ProductCard = ({ product, onView, onEdit, onDelete }: ProductCardProps) => {
+const ProductCard = ({ product, onView, onEdit }: ProductCardProps) => {
+    const { handleDeleteProduct, isDeleting } = useProductDeleteHandler();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     const nextImage = () => {
@@ -148,8 +149,8 @@ const ProductCard = ({ product, onView, onEdit, onDelete }: ProductCardProps) =>
                         <Button variant="secondary" size="icon" className="h-8 w-8" onClick={() => onEdit?.(product)} title="Edit Product">
                             <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="destructive" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDelete?.(product)} title="Delete Product">
-                            <Trash2 className="h-4 w-4 text-white" />
+                        <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleDeleteProduct(product)} disabled={isDeleting} title="Delete Product">
+                            <Trash2 className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>

@@ -7,8 +7,10 @@ import { TProductsResponse, useGetMyProductsQuery } from "@/redux/features/produ
 import { IProduct } from "@/app/types/product";
 import ProductCard from "@/components/MyProductCard";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const MyProductsPage = () => {
+    const router = useRouter();
     const [currentPage, setCurrentPage] = useState(1);
     const { data, isLoading, isError } = useGetMyProductsQuery({
         page: currentPage,
@@ -27,17 +29,12 @@ const MyProductsPage = () => {
 
     const handleViewProduct = (product: IProduct) => {
         console.log("View product:", product);
-        // Navigate to product details page or show modal
+        router.push(`/my-products/${product._id}`);
     };
 
     const handleEditProduct = (product: IProduct) => {
         console.log("Edit product:", product);
         // Navigate to edit page
-    };
-
-    const handleDeleteProduct = (product: IProduct) => {
-        console.log("Delete product:", product);
-        // Show confirmation dialog and delete
     };
 
     // Generate page numbers for pagination
@@ -82,7 +79,7 @@ const MyProductsPage = () => {
                 <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                         {products.map((product: IProduct) => (
-                            <ProductCard key={product._id} product={product} onView={handleViewProduct} onEdit={handleEditProduct} onDelete={handleDeleteProduct} />
+                            <ProductCard key={product._id} product={product} onView={handleViewProduct} onEdit={handleEditProduct} />
                         ))}
                     </div>
 

@@ -1,75 +1,76 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, ShoppingCart, ArrowLeft, Plus, Minus, CreditCard } from "lucide-react";
+import { Edit, Trash2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRouter } from "next/navigation";
-import { useGetProductByIdQuery } from "@/redux/features/product/productApi";
-import { useAddToCartMutation } from "@/redux/features/cart/cartApi";
+import { useGetProductByIdQuery, useDeleteProductMutation } from "@/redux/features/product/productApi";
 import { toast } from "sonner";
+import Swal from "sweetalert2";
 import { useState } from "react";
 
-const ProductPage = () => {
+const MyProductPage = () => {
     const params = useParams();
     const router = useRouter();
     const productId = params.id as string;
-    const [quantity, setQuantity] = useState(1);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-    const [addToCart, { isLoading: isAddingToCart }] = useAddToCartMutation();
     const { data, error, isLoading } = useGetProductByIdQuery(productId);
+    const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
+
     const product = data?.data || null;
 
-    const handleAddToCart = async () => {
+    const handleEditProduct = () => {
+        if (!product) return;
+        router.push(`/my-products/edit/${product._id}`);
+    };
+
+    const handleDeleteProduct = async () => {
         if (!product) return;
 
-        try {
-            await addToCart({
-                productId: product._id,
-                quantity,
-            }).unwrap();
+        const result = await Swal.fire({
+            title: "Are you sure?",
+            html: `
+                <div class="text-left">
+                    <p>You are about to delete the product:</p>
+                    <p class="font-semibold mt-2">${product.name}</p>
+                    <p class="text-sm text-muted-foreground mt-2">This action cannot be undone!</p>
+                </div>
+            `,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#dc2626",
+            cancelButtonColor: "#6b7280",
+            confirmButtonText: "Yes, delete it!",
+            cancelButtonText: "Cancel",
+            reverseButtons: false,
+        });
 
-            toast.success(`${quantity} ${product.name} has been added to your cart.`);
-        } catch (error) {
-            toast.error("Failed to add to cart. Please try again.");
-            console.error("Add to cart error:", error);
-        }
-    };
+        if (result.isConfirmed) {
+            try {
+                await deleteProduct(product._id).unwrap();
 
-    const handleDirectCheckout = async () => {
-        if (!product) return;
+                toast.success(`${product.name} has been deleted successfully.`);
+                router.push("/my-products");
+            } catch (error: unknown) {
+                console.error("Delete product error:", error);
 
-        try {
-            await addToCart({
-                productId: product._id,
-                quantity,
-            }).unwrap();
+                let errorMessage = "Failed to delete product. Please try again.";
 
-            toast.success(`${quantity} ${product.name} added to cart. Redirecting to checkout...`);
-            router.push("/checkout");
-        } catch (error) {
-            toast.error("Failed to proceed to checkout. Please try again.");
-            console.error("Checkout error:", error);
-        }
-    };
+                if (typeof error === "object" && error !== null && "data" in error) {
+                    const maybeError = error as { data?: { message?: string } };
 
-    const handleAddToWishlist = () => {
-        if (!product) return;
-        toast.success(`${product.name} has been added to your wishlist.`);
-    };
+                    if (maybeError.data?.message) {
+                        errorMessage = maybeError.data.message;
+                    }
+                } else if (error instanceof Error) {
+                    errorMessage = error.message;
+                }
 
-    const increaseQuantity = () => {
-        if (product && quantity < product.stock) {
-            setQuantity(quantity + 1);
-        }
-    };
-
-    const decreaseQuantity = () => {
-        if (quantity > 1) {
-            setQuantity(quantity - 1);
+                toast.error(errorMessage);
+            }
         }
     };
 
@@ -84,7 +85,7 @@ const ProductPage = () => {
             <div className="container mx-auto p-4 md:p-6">
                 <Button variant="ghost" onClick={() => router.back()} className="mb-6">
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Products
+                    Back to My Products
                 </Button>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -118,15 +119,15 @@ const ProductPage = () => {
     if (error || !product) {
         return (
             <div className="container mx-auto p-6">
-                <Button variant="ghost" onClick={() => router.back()} className="mb-6">
+                <Button variant="ghost" onClick={() => router.push("/my-products")} className="mb-6">
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Products
+                    Back to My Products
                 </Button>
 
                 <div className="text-center py-12">
                     <h2 className="text-2xl font-bold text-red-600 mb-4">Product Not Found</h2>
                     <p className="text-gray-600 mb-6">{error ? ("status" in error ? error.status : "An error occurred") : "The product you're looking for doesn't exist."}</p>
-                    <Button onClick={() => router.push("/products")}>Browse Products</Button>
+                    <Button onClick={() => router.push("/my-products")}>Back to My Products</Button>
                 </div>
             </div>
         );
@@ -135,16 +136,16 @@ const ProductPage = () => {
     return (
         <div className="container mx-auto p-4 md:p-6">
             {/* Back button */}
-            <Button variant="ghost" onClick={() => router.back()} className="mb-6">
+            <Button variant="ghost" onClick={() => router.push("/my-products")} className="mb-6">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Products
+                Back to My Products
             </Button>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Product Images */}
                 <div>
                     <div className="relative h-96 w-full overflow-hidden rounded-lg mb-4">
-                        <Image src={selectedImage} alt={product.name} fill className="object-cover" priority />
+                        <Image src={selectedImage} alt={product.name} fill className="object-cover" />
                         {/* Discount badge */}
                         {product.discountPrice && product.discountPrice < product.price && (
                             <Badge variant="destructive" className="absolute top-4 left-4">
@@ -167,9 +168,23 @@ const ProductPage = () => {
 
                 {/* Product Details */}
                 <div className="space-y-6">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
-                        <p className="text-gray-600">{product.category}</p>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
+                            <p className="text-gray-600">{product.category}</p>
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex gap-2">
+                            <Button onClick={handleEditProduct} variant="outline" size="sm" className="flex items-center gap-2">
+                                <Edit className="h-4 w-4" />
+                                Edit
+                            </Button>
+                            <Button onClick={handleDeleteProduct} variant="destructive" size="sm" disabled={isDeleting} className="flex items-center gap-2">
+                                <Trash2 className="h-4 w-4" />
+                                {isDeleting ? "Deleting..." : "Delete"}
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Price */}
@@ -185,63 +200,15 @@ const ProductPage = () => {
                     </div>
 
                     {/* Stock status */}
-                    <div>
+                    <div className="flex items-center gap-4">
                         <Badge variant={product.stock > 0 ? "default" : "destructive"}>{product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}</Badge>
+                        <span className="text-sm text-gray-500">Quantity: {product.quantity}</span>
                     </div>
 
-                    {/* Quantity Selector */}
-                    {product.stock > 0 && (
-                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                            <span className="text-sm font-medium">Quantity:</span>
-                            <div className="flex items-center border rounded-md bg-white">
-                                <Button variant="ghost" size="icon" onClick={decreaseQuantity} disabled={quantity <= 1} className="h-10 w-10">
-                                    <Minus className="h-4 w-4" />
-                                </Button>
-                                <span className="w-12 text-center font-medium text-lg">{quantity}</span>
-                                <Button variant="ghost" size="icon" onClick={increaseQuantity} disabled={quantity >= product.stock} className="h-10 w-10">
-                                    <Plus className="h-4 w-4" />
-                                </Button>
-                            </div>
-                            <span className="text-sm text-gray-500">Max: {product.stock}</span>
-                        </div>
-                    )}
-
-                    {/* Total Price */}
-                    {product.stock > 0 && (
-                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                            <div className="flex justify-between items-center">
-                                <span className="text-lg font-semibold text-gray-800">Total:</span>
-                                <span className="text-2xl font-bold text-primary">${((product.discountPrice || product.price) * quantity).toFixed(2)}</span>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Action buttons */}
-                    {product.stock > 0 && (
-                        <div className="flex flex-col gap-3 pt-4">
-                            <div className="grid grid-cols-2 gap-3">
-                                <Button onClick={handleAddToCart} disabled={isAddingToCart} className="flex-1" size="lg" variant="outline">
-                                    <ShoppingCart className="h-5 w-5 mr-2" />
-                                    {isAddingToCart ? "Adding..." : "Add to Cart"}
-                                </Button>
-
-                                <Button onClick={handleDirectCheckout} disabled={isAddingToCart} className="flex-1" size="lg">
-                                    <CreditCard className="h-5 w-5 mr-2" />
-                                    Buy Now
-                                </Button>
-                            </div>
-
-                            <Button variant="secondary" onClick={handleAddToWishlist} disabled={isAddingToCart} size="lg">
-                                <Heart className="h-5 w-5 mr-2" />
-                                Add to Wishlist
-                            </Button>
-                        </div>
-                    )}
-
                     {/* Description */}
-                    <div className="pt-4">
+                    <div>
                         <h3 className="text-lg font-semibold mb-2">Description</h3>
-                        <p className="text-gray-700 leading-relaxed">{product.description}</p>
+                        <p className="text-gray-700">{product.description}</p>
                     </div>
 
                     {/* Tags */}
@@ -250,7 +217,7 @@ const ProductPage = () => {
                             <h3 className="text-lg font-semibold mb-2">Tags</h3>
                             <div className="flex flex-wrap gap-2">
                                 {product.tags.map((tag, index) => (
-                                    <Badge key={index} variant="secondary" className="px-3 py-1">
+                                    <Badge key={index} variant="secondary">
                                         {tag}
                                     </Badge>
                                 ))}
@@ -258,21 +225,45 @@ const ProductPage = () => {
                         </div>
                     )}
 
+                    {/* Product Stats */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                        <h3 className="text-lg font-semibold mb-3">Product Statistics</h3>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span className="text-gray-600">Original Price:</span>
+                                <span className="font-medium ml-2">${product.price}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-600">Discount Price:</span>
+                                <span className="font-medium ml-2">{product.discountPrice ? `$${product.discountPrice}` : "N/A"}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-600">Stock Level:</span>
+                                <span className="font-medium ml-2">{product.stock}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-600">Initial Quantity:</span>
+                                <span className="font-medium ml-2">{product.quantity}</span>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Additional info */}
                     <div className="pt-6 border-t border-gray-200">
                         <h3 className="text-lg font-semibold mb-3">Product Information</h3>
                         <div className="text-sm text-gray-600 space-y-2">
                             <p>
-                                <span className="font-medium">SKU:</span> {product._id}
+                                <span className="font-medium">Product ID:</span> {product._id}
                             </p>
                             <p>
                                 <span className="font-medium">Category:</span> {product.category || "N/A"}
                             </p>
-                            {product.createdAt && (
-                                <p>
-                                    <span className="font-medium">Added:</span> {new Date(product.createdAt).toLocaleDateString()}
-                                </p>
-                            )}
+                            <p>
+                                <span className="font-medium">Created:</span> {product?.createdAt ? new Date(product.createdAt).toLocaleDateString() : "N/A"}
+                            </p>
+                            <p>
+                                <span className="font-medium">Last Updated:</span> {product?.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : "N/A"}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -281,4 +272,4 @@ const ProductPage = () => {
     );
 };
 
-export default ProductPage;
+export default MyProductPage;
