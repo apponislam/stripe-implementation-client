@@ -10,12 +10,11 @@ import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetAllProductsQuery } from "@/redux/features/product/productApi";
 import PublicProductCard from "./PublicProductCard";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 const ProductsPage = () => {
     const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(10);
+    const [limit, setLimit] = useState(12);
     const [searchTerm, setSearchTerm] = useState("");
     const [category, setCategory] = useState("all");
     const [sortBy, setSortBy] = useState("newest");
@@ -31,42 +30,8 @@ const ProductsPage = () => {
     const totalProducts = data?.meta?.total || 0;
     const totalPages = Math.ceil(totalProducts / limit);
 
-    // Handle product actions
     const handleViewProduct = (product: IProduct) => {
-        // Navigate to product detail page
         router.push(`/products/${product._id}`);
-    };
-
-    // Handle product actions
-    // const handleViewProduct = (product: IProduct) => {
-    //     // Navigate to product detail page
-    //     window.location.href = `/products/${product._id}`;
-    // };
-
-    const handleAddToCart = (product: IProduct) => {
-        // Add to cart logic
-        console.log("Add to cart:", product);
-
-        // Show success toast
-        // toast({
-        //     title: "Added to Cart",
-        //     description: `${product.name} has been added to your cart.`,
-        //     duration: 3000,
-        // });
-
-        // Here you would typically dispatch to your cart store
-        // dispatch(addToCart({ product, quantity: 1 }));
-    };
-
-    const handleAddToWishlist = (product: IProduct) => {
-        // Add to wishlist logic
-        console.log("Add to wishlist:", product);
-
-        // Show success toast
-        toast.success(`${product.name} has been added to your wishlist.`);
-
-        // Here you would typically dispatch to your wishlist store
-        // dispatch(addToWishlist(product));
     };
 
     const filteredProducts = products
@@ -194,7 +159,7 @@ const ProductsPage = () => {
                         <>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
                                 {filteredProducts.map((product) => (
-                                    <PublicProductCard key={product._id} product={product} onView={handleViewProduct} onAddToCart={handleAddToCart} onAddToWishlist={handleAddToWishlist} />
+                                    <PublicProductCard key={product._id} product={product} onView={handleViewProduct} />
                                 ))}
                             </div>
 

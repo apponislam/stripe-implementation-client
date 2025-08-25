@@ -10,6 +10,7 @@ import { Menu, ShoppingCart } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Root as VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import Image from "next/image";
+import { Cart } from "./Cart";
 
 const Header = () => {
     const user = useSelector(currentUser);
@@ -42,10 +43,11 @@ const Header = () => {
 
                 {/* Desktop Actions */}
                 <div className="hidden md:flex items-center gap-4 relative">
-                    <Link href="/cart" className="relative">
+                    {/* <Link href="/cart" className="relative">
                         <ShoppingCart className="h-6 w-6 text-gray-700 transition" />
-                        <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">2</span>
-                    </Link>
+                        <span className="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">2</span>
+                    </Link> */}
+                    <Cart></Cart>
 
                     {user ? (
                         <DropdownMenu>
