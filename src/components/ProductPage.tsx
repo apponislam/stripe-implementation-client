@@ -3,34 +3,59 @@
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, ShoppingCart, ArrowLeft } from "lucide-react";
+import { Heart, ShoppingCart, ArrowLeft, Plus, Minus } from "lucide-react";
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
 import { useGetProductByIdQuery } from "@/redux/features/product/productApi";
+import { useAddToCartMutation } from "@/redux/features/cart/cartApi"; // Added this import
 import { toast } from "sonner";
+import { useState } from "react";
 
 const ProductPage = () => {
     const params = useParams();
     const router = useRouter();
     const productId = params.id as string;
+    const [quantity, setQuantity] = useState(1);
+
+    // Added cart mutation hook
+    const [addToCart, { isLoading: isAddingToCart }] = useAddToCartMutation();
 
     const { data, error, isLoading } = useGetProductByIdQuery(productId);
     const product = data?.data || null;
 
-    console.log(data);
-
-    const handleAddToCart = () => {
+    const handleAddToCart = async () => {
         if (!product) return;
 
-        toast.success(`${product.name} has been added to your cart.`);
-        // Add to cart logic here
+        try {
+            // Use the actual mutation hook
+            await addToCart({
+                productId: product._id,
+                quantity,
+            }).unwrap();
+
+            toast.success(`${quantity} ${product.name} has been added to your cart.`);
+        } catch (error) {
+            toast.error("Failed to add to cart. Please try again.");
+            console.error("Add to cart error:", error);
+        }
     };
 
     const handleAddToWishlist = () => {
         if (!product) return;
-
         toast.success(`${product.name} has been added to your wishlist.`);
+    };
+
+    const increaseQuantity = () => {
+        if (product && quantity < product.stock) {
+            setQuantity(quantity + 1);
+        }
+    };
+
+    const decreaseQuantity = () => {
+        if (quantity > 1) {
+            setQuantity(quantity - 1);
+        }
     };
 
     if (isLoading) {
@@ -143,6 +168,23 @@ const ProductPage = () => {
                         <Badge variant={product.stock > 0 ? "default" : "destructive"}>{product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}</Badge>
                     </div>
 
+                    {/* Quantity Selector */}
+                    {product.stock > 0 && (
+                        <div className="flex items-center gap-4">
+                            <span className="text-sm font-medium">Quantity:</span>
+                            <div className="flex items-center border rounded-md">
+                                <Button variant="ghost" size="icon" onClick={decreaseQuantity} disabled={quantity <= 1} className="h-8 w-8">
+                                    <Minus className="h-3 w-3" />
+                                </Button>
+                                <span className="w-8 text-center font-medium">{quantity}</span>
+                                <Button variant="ghost" size="icon" onClick={increaseQuantity} disabled={quantity >= product.stock} className="h-8 w-8">
+                                    <Plus className="h-3 w-3" />
+                                </Button>
+                            </div>
+                            <span className="text-sm text-gray-500">Max: {product.stock}</span>
+                        </div>
+                    )}
+
                     {/* Description */}
                     <div>
                         <h3 className="text-lg font-semibold mb-2">Description</h3>
@@ -165,15 +207,25 @@ const ProductPage = () => {
 
                     {/* Action buttons */}
                     <div className="flex gap-4 pt-6">
-                        <Button onClick={handleAddToCart} disabled={product.stock === 0} className="flex-1" size="lg">
+                        <Button onClick={handleAddToCart} disabled={product.stock === 0 || isAddingToCart} className="flex-1" size="lg">
                             <ShoppingCart className="h-5 w-5 mr-2" />
-                            Add to Cart
+                            {isAddingToCart ? "Adding..." : `Add to Cart (${quantity})`}
                         </Button>
 
-                        <Button variant="outline" onClick={handleAddToWishlist} className="px-4" size="lg">
+                        <Button variant="outline" onClick={handleAddToWishlist} className="px-4" size="lg" disabled={isAddingToCart}>
                             <Heart className="h-5 w-5" />
                         </Button>
                     </div>
+
+                    {/* Total Price */}
+                    {product.stock > 0 && (
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-600">Total:</span>
+                                <span className="text-xl font-bold text-primary">${((product.discountPrice || product.price) * quantity).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Additional info */}
                     <div className="pt-6 border-t border-gray-200">

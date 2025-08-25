@@ -3,21 +3,26 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, ShoppingCart, ChevronLeft, ChevronRight, Heart } from "lucide-react";
+import { Eye, ShoppingCart, ChevronLeft, ChevronRight, Heart, Plus, Minus } from "lucide-react";
 import Image from "next/image";
 import { IProduct } from "@/app/types/product";
 import { useState } from "react";
+import { toast } from "sonner";
+import { useAddToCartMutation } from "@/redux/features/cart/cartApi";
 
 interface PublicProductCardProps {
     product: IProduct;
     onView?: (product: IProduct) => void;
-    onAddToCart?: (product: IProduct) => void;
+    onAddToCart?: (product: IProduct, quantity: number) => void; // Updated to include quantity
     onAddToWishlist?: (product: IProduct) => void;
 }
 
 const PublicProductCard = ({ product, onView, onAddToCart, onAddToWishlist }: PublicProductCardProps) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [isWishlisted, setIsWishlisted] = useState(false);
+    const [quantity, setQuantity] = useState(1); // Added quantity state
+    const [showQuantityControls, setShowQuantityControls] = useState(false);
+    const [addToCart] = useAddToCartMutation();
 
     const nextImage = () => {
         setCurrentImageIndex((prev) => (prev === (product.images?.length || 1) - 1 ? 0 : prev + 1));
@@ -33,15 +38,47 @@ const PublicProductCard = ({ product, onView, onAddToCart, onAddToWishlist }: Pu
         onAddToWishlist?.(product);
     };
 
-    const handleAddToCart = (e: React.MouseEvent) => {
+    const handleAddToCart = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        onAddToCart?.(product);
+
+        if (showQuantityControls) {
+            onAddToCart?.(product, quantity);
+            await addToCart({
+                productId: product._id,
+                quantity,
+            }).unwrap();
+
+            toast.success(`${quantity} ${product.name} has been added to your cart.`);
+            setShowQuantityControls(false);
+            setQuantity(1);
+        } else {
+            setShowQuantityControls(true);
+        }
     };
 
     const handleViewDetails = (e: React.MouseEvent) => {
         e.stopPropagation();
         onView?.(product);
     };
+
+    const increaseQuantity = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (quantity < product.stock) {
+            setQuantity(quantity + 1);
+        }
+    };
+
+    const decreaseQuantity = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (quantity > 1) {
+            setQuantity(quantity - 1);
+        }
+    };
+
+    // const handleQuantityClick = (e: React.MouseEvent) => {
+    //     e.stopPropagation();
+    //     setShowQuantityControls(true);
+    // };
 
     return (
         <Card className="shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden group h-full flex flex-col gap-0 pt-0 pb-3 cursor-pointer">
@@ -63,7 +100,7 @@ const PublicProductCard = ({ product, onView, onAddToCart, onAddToWishlist }: Pu
                                         prevImage();
                                     }}
                                 >
-                                    <ChevronLeft className="h-4 w-4" />
+                                    <ChevronLeft className="h-4 w-4 text-white" />
                                 </Button>
                                 <Button
                                     variant="ghost"
@@ -74,7 +111,7 @@ const PublicProductCard = ({ product, onView, onAddToCart, onAddToWishlist }: Pu
                                         nextImage();
                                     }}
                                 >
-                                    <ChevronRight className="h-4 w-4" />
+                                    <ChevronRight className="h-4 w-4 text-white" />
                                 </Button>
 
                                 {/* Image Indicator Dots */}
@@ -165,10 +202,25 @@ const PublicProductCard = ({ product, onView, onAddToCart, onAddToWishlist }: Pu
                         Details
                     </Button>
 
-                    <Button variant="default" size="sm" onClick={handleAddToCart} disabled={product.stock === 0} className="flex-1">
-                        <ShoppingCart className="h-4 w-4 mr-1" />
-                        Add to Cart
-                    </Button>
+                    {showQuantityControls ? (
+                        <div className="flex items-center gap-1 bg-primary rounded-md">
+                            <Button variant="ghost" size="icon" onClick={decreaseQuantity} disabled={quantity <= 1} className="h-8 w-8 text-white ">
+                                <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="text-white font-medium text-sm min-w-[2rem] text-center">{quantity}</span>
+                            <Button variant="ghost" size="icon" onClick={increaseQuantity} disabled={quantity >= product.stock} className="h-8 w-8 text-white ">
+                                <Plus className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={handleAddToCart} className="h-8 text-white px-2">
+                                OK
+                            </Button>
+                        </div>
+                    ) : (
+                        <Button variant="default" size="sm" onClick={handleAddToCart} disabled={product.stock === 0} className="flex-1">
+                            <ShoppingCart className="h-4 w-4 mr-1" />
+                            Add to Cart
+                        </Button>
+                    )}
                 </div>
             </CardFooter>
         </Card>
