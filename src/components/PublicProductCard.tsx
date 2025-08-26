@@ -148,7 +148,7 @@ const PublicProductCard = ({ product, onView, onAddToCart, onAddToWishlist }: Pu
 
                 {/* Image Count Badge */}
                 {product.images && product.images.length > 1 && (
-                    <Badge variant="secondary" className="absolute top-2 left-12">
+                    <Badge variant="secondary" className="absolute top-2 left-20">
                         {currentImageIndex + 1}/{product.images.length}
                     </Badge>
                 )}
