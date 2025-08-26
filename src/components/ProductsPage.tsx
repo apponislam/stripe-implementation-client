@@ -113,7 +113,7 @@ const ProductsPage = () => {
                         <SelectValue placeholder="Show" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="10">Show 10</SelectItem>
+                        <SelectItem value="12">Show 12</SelectItem>
                         <SelectItem value="20">Show 20</SelectItem>
                         <SelectItem value="50">Show 50</SelectItem>
                     </SelectContent>
