@@ -2,6 +2,7 @@ import { TOrdersResponse, TSingleOrderResponse, TCheckoutSessionResponse, TCreat
 import { baseApi } from "@/redux/api/baseApi";
 
 export const orderApi = baseApi.injectEndpoints({
+    overrideExisting: true,
     endpoints: (builder) => ({
         // Create checkout session
         createCheckoutSession: builder.mutation<TCheckoutSessionResponse, TCreateCheckoutSessionRequest>({
@@ -49,19 +50,7 @@ export const orderApi = baseApi.injectEndpoints({
             }),
             invalidatesTags: (_result, _err, id) => [{ type: "Orders", id }],
         }),
-
-        // Handle webhook (if needed on frontend, though usually backend handles this)
-        handleWebhook: builder.mutation<{ success: boolean; message: string }, any>({
-            query: (body) => ({
-                url: "/orders/webhook",
-                method: "POST",
-                body,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            }),
-        }),
     }),
 });
 
-export const { useCreateCheckoutSessionMutation, useGetMyOrdersQuery, useGetOrderByIdQuery, useGetOrderBySessionIdQuery, useUpdateOrderStatusMutation, useCancelOrderMutation, useHandleWebhookMutation } = orderApi;
+export const { useCreateCheckoutSessionMutation, useGetMyOrdersQuery, useGetOrderByIdQuery, useGetOrderBySessionIdQuery, useUpdateOrderStatusMutation, useCancelOrderMutation } = orderApi;
