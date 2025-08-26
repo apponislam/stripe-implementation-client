@@ -201,18 +201,18 @@ export default function OrderDetailsPage() {
     return (
         <div className="container mx-auto p-6 max-w-4xl">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" onClick={() => router.push("/orders")} className="flex items-center gap-2">
+                    <Button variant="ghost" onClick={() => router.push("/orders")} className="flex items-center gap-2" size="sm">
                         <ArrowLeft className="h-4 w-4" />
-                        Back to Orders
+                        <span className="hidden sm:inline">Back to Orders</span>
                     </Button>
-                    <h1 className="text-3xl font-bold flex items-center gap-3">
-                        <Package className="h-8 w-8" />
+                    <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-3">
+                        <Package className="h-6 w-6 sm:h-8 sm:w-8" />
                         Order Details
                     </h1>
                 </div>
-                <Badge variant="outline" className="text-lg px-4 py-2">
+                <Badge variant="outline" className="text-base sm:text-lg px-3 py-1 sm:px-4 sm:py-2 self-start sm:self-auto">
                     Order #{order._id.slice(-8).toUpperCase()}
                 </Badge>
             </div>
