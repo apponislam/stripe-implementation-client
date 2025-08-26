@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, ShoppingBag, Download, Home, Package, Truck, Clock } from "lucide-react";
+import { CheckCircle, ShoppingBag, Download, Home, Package, Truck, Clock, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
-import { useGetOrderBySessionIdQuery } from "@/redux/features/order/orderSlice";
+import { useDownloadInvoiceMutation, useGetOrderBySessionIdQuery } from "@/redux/features/order/orderApi";
 
 interface OrderItem {
     _id: string;
@@ -62,8 +62,11 @@ export default function OrderSuccessPage() {
         }
     }, [data]);
 
-    const handleDownloadInvoice = () => {
-        console.log("Download invoice for order:", order?._id);
+    const [downloadInvoice, { isLoading: isPdfLoading }] = useDownloadInvoiceMutation();
+
+    const handleDownloadPDF = () => {
+        if (!order?._id) return;
+        downloadInvoice(order._id);
     };
 
     const getOrderStatusIcon = (status: string) => {
@@ -217,9 +220,9 @@ export default function OrderSuccessPage() {
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button className="w-full" variant="outline" onClick={handleDownloadInvoice}>
-                            <Download className="h-4 w-4 mr-2" />
-                            Download Invoice
+                        <Button onClick={handleDownloadPDF} disabled={isPdfLoading} className="w-full" variant="outline">
+                            {isPdfLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                            Download PDF Invoice
                         </Button>
                     </CardFooter>
                 </Card>

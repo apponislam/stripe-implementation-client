@@ -10,26 +10,6 @@ export interface IOrderItem {
     quantity: number;
 }
 
-// export interface IOrder {
-//     _id?: string;
-//     orderId: string;
-//     userId: {
-//         _id: string;
-//         name: string;
-//         email: string;
-//     };
-//     items: IOrderItem[];
-//     totalAmount: number;
-//     discountAmount?: number;
-//     finalAmount: number;
-//     paymentStatus: "pending" | "completed" | "failed" | "refunded";
-//     paymentMethod: "stripe";
-//     stripeSessionId?: string;
-//     stripePaymentIntentId?: string;
-//     orderStatus: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled";
-//     createdAt?: Date;
-//     updatedAt?: Date;
-// }
 export interface IOrder {
     _id: string;
     orderId?: string;
