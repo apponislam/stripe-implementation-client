@@ -21,6 +21,7 @@ const store = configureStore({
         getDefaultMiddlewares({
             serializableCheck: {
                 ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+                ignoredPaths: ["ordersApi.queries.downloadInvoice", "ordersApi.queries.downloadInvoiceHTML"],
             },
         }).concat(baseApi.middleware),
 });

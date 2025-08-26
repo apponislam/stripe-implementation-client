@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useGetCartQuery, useUpdateCartItemMutation, useRemoveFromCartMutation, useClearCartMutation } from "@/redux/features/cart/cartApi";
-import { useCreateCheckoutSessionMutation } from "@/redux/features/order/orderSlice";
+import { useCreateCheckoutSessionMutation } from "@/redux/features/order/orderApi";
 
 import { ShoppingCart, X, Plus, Minus, Trash2, Loader2 } from "lucide-react";
 import Image from "next/image";
