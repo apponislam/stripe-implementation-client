@@ -13,6 +13,7 @@ import { setUser } from "@/redux/features/auth/authSlice";
 import { useAppDispatch } from "@/redux/hooks";
 import { useLoginMutation } from "@/redux/features/auth/authApi";
 import { TApiErrorResponse } from "@/app/types/error";
+import { useGetCartQuery } from "@/redux/features/cart/cartApi";
 
 const formSchema = z.object({
     email: z.string().email({
@@ -27,6 +28,7 @@ export function LoginForm() {
     const router = useRouter();
     const dispatch = useAppDispatch();
     const [login, { isLoading }] = useLoginMutation();
+    const { refetch } = useGetCartQuery();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -46,11 +48,14 @@ export function LoginForm() {
                 })
             );
 
+            // await refetch();
+
+            console.log(refetch());
+
             toast.success("Welcome back!", {
                 description: "Login successful",
                 duration: 2000,
             });
-
             router.push("/");
         } catch (error: unknown) {
             let errorMessage = "Invalid credentials";

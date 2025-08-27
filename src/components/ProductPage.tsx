@@ -11,6 +11,7 @@ import { useGetProductByIdQuery } from "@/redux/features/product/productApi";
 import { useAddToCartMutation } from "@/redux/features/cart/cartApi";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useCreateCheckoutSessionMutation } from "@/redux/features/order/orderApi";
 
 const ProductPage = () => {
     const params = useParams();
@@ -39,20 +40,51 @@ const ProductPage = () => {
         }
     };
 
+    const [isCheckingOut, setIsCheckingOut] = useState(false);
+    const [createCheckoutSession] = useCreateCheckoutSessionMutation();
+
+    // const handleDirectCheckout = async () => {
+    //     if (!product) return;
+
+    //     try {
+    //         await addToCart({
+    //             productId: product._id,
+    //             quantity,
+    //         }).unwrap();
+
+    //         toast.success(`${quantity} ${product.name} added to cart. Redirecting to checkout...`);
+    //         router.push("/checkout");
+    //     } catch (error) {
+    //         toast.error("Failed to proceed to checkout. Please try again.");
+    //         console.error("Checkout error:", error);
+    //     }
+    // };
+
     const handleDirectCheckout = async () => {
         if (!product) return;
 
+        setIsCheckingOut(true);
         try {
-            await addToCart({
+            // Prepare item for checkout
+            const checkoutItem = {
                 productId: product._id,
-                quantity,
+                quantity: quantity,
+            };
+
+            // Create checkout session
+            const result = await createCheckoutSession({
+                items: [checkoutItem],
             }).unwrap();
 
-            toast.success(`${quantity} ${product.name} added to cart. Redirecting to checkout...`);
-            router.push("/checkout");
-        } catch (error) {
-            toast.error("Failed to proceed to checkout. Please try again.");
-            console.error("Checkout error:", error);
+            if (result.success && result.data?.url) {
+                // Redirect to Stripe checkout
+                window.location.href = result.data.url;
+            }
+        } catch (error: any) {
+            console.error("Checkout failed:", error);
+            toast.error(error?.data?.message || "Failed to proceed to checkout. Please try again.");
+        } finally {
+            setIsCheckingOut(false);
         }
     };
 
@@ -225,7 +257,11 @@ const ProductPage = () => {
                                     {isAddingToCart ? "Adding..." : "Add to Cart"}
                                 </Button>
 
-                                <Button onClick={handleDirectCheckout} disabled={isAddingToCart} className="flex-1" size="lg">
+                                {/* <Button onClick={handleDirectCheckout} disabled={isAddingToCart} className="flex-1" size="lg">
+                                    <CreditCard className="h-5 w-5 mr-2" />
+                                    Buy Now
+                                </Button> */}
+                                <Button onClick={handleDirectCheckout} disabled={isCheckingOut} className="flex-1" size="lg">
                                     <CreditCard className="h-5 w-5 mr-2" />
                                     Buy Now
                                 </Button>

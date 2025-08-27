@@ -9,6 +9,7 @@ type RefreshTokenResponse = {
 };
 
 const authApi = baseApi.injectEndpoints({
+    overrideExisting: true,
     endpoints: (builder) => ({
         login: builder.mutation({
             query: (userInfo) => ({
@@ -16,6 +17,7 @@ const authApi = baseApi.injectEndpoints({
                 method: "POST",
                 body: userInfo,
             }),
+            invalidatesTags: ["Cart"],
         }),
         register: builder.mutation({
             query: (userInfo) => ({
@@ -37,6 +39,7 @@ const authApi = baseApi.injectEndpoints({
                 method: "POST",
                 credentials: "include",
             }),
+            invalidatesTags: ["Cart"],
         }),
     }),
 });

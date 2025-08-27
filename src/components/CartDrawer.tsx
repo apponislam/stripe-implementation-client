@@ -135,7 +135,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                 window.location.href = result.data.url;
             }
         } catch (error: any) {
-            console.error("Checkout failed:", error);
+            // console.error("Checkout failed:", error);
             toast.error(error?.data?.message || "Failed to proceed to checkout. Please try again.");
         } finally {
             setIsCheckingOut(false);
@@ -143,7 +143,8 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
     };
 
     if (error) {
-        console.error("Cart error:", error);
+        console.log(error);
+        // console.error("Cart error:", error);
     }
 
     const isOutOfStock = items.some((item) => item.productId.stock === 0);
