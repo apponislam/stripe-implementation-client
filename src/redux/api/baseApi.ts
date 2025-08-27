@@ -23,9 +23,16 @@ const baseQuery = fetchBaseQuery({
 
 const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {
     let result = await baseQuery(args, api, extraOptions);
+    const state = api.getState() as RootState;
+    const isLoggedOut = !state.auth.token;
 
-    if (result?.error?.status === 401) {
-        // console.log("Attempting token refresh...");
+    if (result?.error?.status === 401 && !isLoggedOut) {
+        // Don't attempt refresh if we're already trying to logout or if we're already logged out
+        if (typeof args === "object" && "url" in args && args.url === "/auth/logout") {
+            return result;
+        }
+
+        console.log("Attempting token refresh...");
 
         const refreshResult = await baseQuery(
             {
@@ -37,21 +44,18 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
             extraOptions
         );
 
-        if (refreshResult.data && typeof refreshResult.data === "object" && "data" in refreshResult.data && refreshResult.data.data && typeof refreshResult.data.data === "object") {
+        if (refreshResult.data && typeof refreshResult.data === "object" && "data" in refreshResult.data) {
             const responseData = refreshResult.data as RefreshTokenResponse;
             const { accessToken, user } = responseData.data;
 
             api.dispatch(setUser({ user, token: accessToken }));
 
-            // Retry with updated token from store
+            // Retry with updated token
             result = await baseQuery(args, api, extraOptions);
-            console.log("Retry result:", result);
-
             return result;
         } else {
-            // console.log("Refresh failed - logging out");
+            console.log("Refresh failed - logging out");
             api.dispatch(logOut());
-            if (typeof window !== "undefined") window.location.href = "/";
             return { error: { status: 401, data: "Session expired" } };
         }
     }

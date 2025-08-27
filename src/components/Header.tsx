@@ -11,13 +11,65 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Root as VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import Image from "next/image";
 import { Cart } from "./Cart";
+import { useLogoutMutation } from "@/redux/features/auth/authApi";
+import { toast } from "sonner";
 
 const Header = () => {
     const user = useSelector(currentUser);
     const dispatch = useDispatch();
 
-    const handleLogout = () => {
-        dispatch(logOut());
+    const [logOutApi, { isLoading }] = useLogoutMutation();
+
+    // const handleLogout = async () => {
+    //     try {
+    //         await logOutApi().unwrap();
+    //         dispatch(logOut());
+    //         // Optional: show success message
+    //         toast.success("Logged out successfully");
+    //     } catch (error) {
+    //         console.error("Logout failed:", error);
+
+    //         // Handle different error types
+    //         if (error && typeof error === "object" && "data" in error) {
+    //             const errorData = (error as { data: unknown }).data;
+
+    //             if (errorData && typeof errorData === "object" && "message" in errorData && typeof errorData.message === "string") {
+    //                 toast.error(errorData.message);
+    //                 return;
+    //             }
+    //         }
+
+    //         if (error instanceof Error) {
+    //             toast.error(error.message);
+    //         } else {
+    //             toast.error("Failed to logout. Please try again.");
+    //         }
+    //     }
+    // };
+    const handleLogout = async (event?: Event): Promise<void> => {
+        // Prevent default behavior if event is provided (for dropdown)
+        if (event) {
+            event.preventDefault();
+        }
+
+        try {
+            await logOutApi().unwrap();
+            dispatch(logOut());
+            toast.success("Logged out successfully");
+        } catch (error) {
+            console.error("Logout failed:", error);
+
+            // Handle error
+            if (error && typeof error === "object" && "data" in error) {
+                const errorData = (error as { data: unknown }).data;
+                if (errorData && typeof errorData === "object" && "message" in errorData) {
+                    toast.error((errorData as any).message);
+                    return;
+                }
+            }
+
+            toast.error("Failed to logout. Please try again.");
+        }
     };
 
     return (
@@ -63,7 +115,14 @@ const Header = () => {
                                 <DropdownMenuItem asChild>
                                     <Link href="/orders">Orders</Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={(e: React.MouseEvent) => {
+                                        handleLogout(e.nativeEvent);
+                                    }}
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? "Logging out..." : "Logout"}
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     ) : (
@@ -116,8 +175,8 @@ const Header = () => {
                                                 Orders
                                             </Button>
                                         </Link>
-                                        <Button onClick={handleLogout} variant="destructive" className="w-full">
-                                            Logout
+                                        <Button onClick={() => handleLogout()} variant="destructive" className="w-full" disabled={isLoading}>
+                                            {isLoading ? "Logging out..." : "Logout"}
                                         </Button>
                                     </div>
                                 ) : (
