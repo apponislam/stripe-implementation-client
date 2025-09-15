@@ -2,7 +2,6 @@ import { BaseQueryFn, createApi, FetchArgs, fetchBaseQuery, FetchBaseQueryError 
 import { RootState } from "../store";
 import { logOut, setUser, TUser } from "../features/auth/authSlice";
 
-// Interface for refresh token response
 interface RefreshTokenResponse {
     data: {
         accessToken: string;
@@ -10,7 +9,6 @@ interface RefreshTokenResponse {
     };
 }
 
-// 1. Basic fetchBaseQuery setup
 const baseQuery = fetchBaseQuery({
     baseUrl: `${process.env.NEXT_PUBLIC_BASE_API}/api/v1/`,
     credentials: "include",
@@ -22,37 +20,26 @@ const baseQuery = fetchBaseQuery({
 });
 
 const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {
-    let result = await baseQuery(args, api, extraOptions);
+    const result = await baseQuery(args, api, extraOptions);
     const state = api.getState() as RootState;
     const isLoggedOut = !state.auth.token;
 
     if (result?.error?.status === 401 && !isLoggedOut) {
-        // Don't attempt refresh if we're already trying to logout or if we're already logged out
         if (typeof args === "object" && "url" in args && args.url === "/auth/logout") {
             return result;
         }
 
         console.log("Attempting token refresh...");
 
-        const refreshResult = await baseQuery(
-            {
-                url: "auth/refresh-token",
-                method: "POST",
-                credentials: "include",
-            },
-            api,
-            extraOptions
-        );
+        const refreshResult = await baseQuery({ url: "auth/refresh-token", method: "POST", credentials: "include" }, api, extraOptions);
 
         if (refreshResult.data && typeof refreshResult.data === "object" && "data" in refreshResult.data) {
-            const responseData = refreshResult.data as RefreshTokenResponse;
-            const { accessToken, user } = responseData.data;
+            const { accessToken, user } = (refreshResult.data as RefreshTokenResponse).data;
 
             api.dispatch(setUser({ user, token: accessToken }));
 
-            // Retry with updated token
-            result = await baseQuery(args, api, extraOptions);
-            return result;
+            // Retry the original query with the new token
+            return await baseQuery(args, api, extraOptions);
         } else {
             console.log("Refresh failed - logging out");
             api.dispatch(logOut());
