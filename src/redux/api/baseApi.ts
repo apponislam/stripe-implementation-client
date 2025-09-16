@@ -19,7 +19,17 @@ const baseQuery = fetchBaseQuery({
     },
 });
 
+const waitForToken = async (getState: () => RootState | unknown, timeout = 5000) => {
+    const start = Date.now();
+    while (!(getState() as RootState).auth.token) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        if (Date.now() - start > timeout) break;
+    }
+};
+
 const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (args, api, extraOptions) => {
+    await waitForToken(api.getState);
+
     const result = await baseQuery(args, api, extraOptions);
     const state = api.getState() as RootState;
     const isLoggedOut = !state.auth.token;
